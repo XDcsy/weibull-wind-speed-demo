@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>ECharts</title>
+    <!-- 引入 echarts.js -->
+    <script src="echarts.common.min.js"></script>
+</head>
+<body>
+    <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+    <div id="main" style="width: 600px;height:400px;"></div>
+<script type="text/javascript">
+    // 基于准备好的dom，初始化echarts实例
+    var myChart = echarts.init(document.getElementById('main'));
+
+
+//生成随机数代码开始
+var xSeries = [];
+
+var noise = [0];  //初始值
+var xIndex = 0;
+var cofficient = [];
+var accurateSize = 30;  //参与累加的三角函数相数
+var cMin = 1;  //c的最小值，限制变化周期
+var cMax = 10;
+var offSet = [];
+
+for (var i = 0; i < accurateSize; i++) {  //生成系数和偏移量
+	cofficient.push(Math.random()*(cMax-cMin)+cMin);
+	offSet.push(Math.random()*2*Math.PI);
+}
+var cofficientSum = eval(cofficient.join('+'));  //系数的和
+
+
+
+function generateNoiseNumber(x) {
+    var noiseNumber = 0;
+    for (var i = 0; i < accurateSize; i++) {
+        noiseNumber += cofficient[i] * Math.sin(x/cofficient[i] + offSet[i]);
+    }
+    return noiseNumber;
+}
+
+function addData(shift) {
+    xSeries.push(xIndex);
+    //生成待插入的新数
+    newNoiseNumber = generateNoiseNumber(xIndex);
+    
+    noise.push(newNoiseNumber);
+
+    if (shift) {
+        xSeries.shift();
+        noise.shift();
+    }
+
+    xIndex++;
+}
+
+
+//初始化随机数序列，决定了x轴的密度
+for (var i = 1; i < 100; i++) {
+    addData();
+}
+
+option = {
+    xAxis: {
+        type: 'category',
+        boundaryGap: false,
+        axisLabel:{show:false},
+        axisTick:{interval:0},  //强制显示所有标签
+        data: xSeries
+    },
+    yAxis: {
+        boundaryGap: false,
+		//min:-4,
+		//max:4,
+        type: 'value'
+    },
+    series: [
+        {
+            name:'randomNumber',
+            type:'line',
+            //smooth:true,
+            symbol: 'none',
+            areaStyle: {
+                
+				origin: 'start'
+            },
+            data: noise
+        }
+    ]
+};
+
+setInterval(function () {
+    addData(true);
+    myChart.setOption({
+        xAxis: {
+            data: xSeries
+        },
+        series: [{
+            name:'randomNumber',
+            data: noise
+        }]
+    });
+}, 100);
+//生成随机数代码结束
+
+
+
+// 使用刚指定的配置项和数据显示图表。
+myChart.setOption(option);
+</script>
+</body>
+</html>
